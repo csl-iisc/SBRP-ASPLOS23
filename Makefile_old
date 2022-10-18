@@ -1,0 +1,305 @@
+SHELL := /bin/bash  
+CUDA_INSTALL_PATH ?= /usr/local/cuda-11.4
+
+figure6_models = gpm epoch_far sbrp_far epoch_near sbrp_near
+figure9_models = epoch_far_eadr sbrp_far_eadr
+figure10_a_models = sbrp_near_L1_125 sbrp_near_L1_25 sbrp_near_L1_50 sbrp_near 
+figure10_b_models = epoch_near_bw_half sbrp_near_bw_half sbrp_near epoch_near_bw_double sbrp_near_bw_double epoch_near
+figure10_c_models = sbrp_near_window_2 sbrp_near_window_4 sbrp_near_window_6 sbrp_near_window_8 sbrp_near_window_10 sbrp_near_window_12  
+figure11_models = epoch_near sbrp_far epoch_far sbrp_near 
+
+models_perf   = epoch epoch_buff buff_srp_integrated_of6_256 buff_srp_discrete_of6_256
+models_dev    = epoch epoch_buff buff_srp_integrated_of6_256 buff_srp_discrete_of6_256 buff_srp_discrete_eager
+models_evict  = buff_srp_discrete_lazy buff_srp_discrete_eager
+models_bsize  = buff_srp_discrete_of6_64 buff_srp_discrete_of6_128 buff_srp_discrete_of6_256 buff_srp_discrete_of6
+models_bw     = epoch_bw_half buff_srp_discrete_of6_bw_half epoch_bw_double buff_srp_discrete_of6_bw_double buff_srp_discrete_of12_double buff_srp_discrete_of20_double buff_srp_discrete_of3_bw_half
+models_window = buff_srp_discrete_of2_256 buff_srp_discrete_of4_256 buff_srp_discrete_of6_256 buff_srp_discrete_of8_256 buff_srp_discrete_of10_256 buff_srp_discrete_of12_256
+models_gpm    = epoch_gpm_far epoch_gpm_far_nocache buff_srp_integrated_of6_256_gpm_far buff_srp_discrete_of6_256_gpm_far 
+models_cap    = epoch epoch_dram
+models_access = epoch 
+models_rec    = epoch buff_srp_discrete_of6_256 epoch_gpm_far buff_srp_discrete_of6_256_gpm_far 
+#models_scale  =  epoch buff_srp_discrete_of6_256 epoch_2SM epoch_1_5SM buff_srp_discrete_of6_256_2SM buff_srp_discrete_of6_256_1_5SM
+models_scale  =  epoch_2SM_2BW buff_srp_discrete_of6_256_2SM_2BW 
+
+models ?= $(figure6_models)
+#models  ?= $(models_perf) $(models_evict) $(models_bsize) $(models_bw)
+results ?= results
+benchmarks ?= KVS HM SRAD Red MQ Scan
+
+
+.SILENT: output run_kvs 
+	
+clean_run:
+	rm -rf results*;
+	#mkdir -p $(results)/;
+	for i in $(benchmarks); do \ 
+		cd $${i}; \
+		make clean; \
+		cd ../..; \ 
+	done
+
+output:
+ifdef benchmark
+ifndef model
+	echo $(benchmark)
+	for j in $(models); do \
+		time=$$(tac $(results)//$${j}_$(benchmark).out | grep -m1 "gpu_tot_sim_cycle =" | grep -m1 -oE '[0-9]+'); \
+		w_misses=$$(tac $(results)//$${j}_$(benchmark).out | grep -m1 "L1D_total_pm_write_cache_misses =" | grep -m2 -oE '[0-9]+[0-9]+'); \
+		r_misses=$$(tac $(results)//$${j}_$(benchmark).out | grep -m1 "L1D_total_pm_read_cache_misses =" | grep -m2 -oE '[0-9]+[0-9]+'); \
+		bw_utils=$$(tac $(results)//$${j}_$(benchmark).out | grep -m12 -oE "bw_util=[0-9]+\.[0-9]+" | grep -m12 -oE '[0-9]+\.[0-9]+'); \
+		avg_util=0.0; \
+		for x in $${bw_utils}; do \
+			avg_util=$$(echo "$$x+$$avg_util" | bc); \
+		done; \
+		avg_util=$$(echo "scale=5;$$avg_util / 12.0" | bc); \
+		printf '%s:\t%d\tcycles\tPM BW Util:\t%f\tWMisses:\t%d\tRMisses:\t%d\n' $${j} $${time} $${avg_util} $${w_misses} $${r_misses}; \
+	done
+else		
+	time=$(tac $(results)//$(model)_$(benchmark).out | grep -m1 "gpu_tot_sim_cycle =" | grep -m1 -oE '[0-9]+'); \
+	accuracy=$(tac $(results)//$(model)_$(benchmark).out | grep -m1 "L1D_total_cache_miss_rate =" | grep -m1 -oE '[0-9]+\.[0-9]+'); \
+	bw_utils=$$(tac $(results)//$(model)_$(benchmark).out | grep -m12 "bw_util =" | grep -m1 -oE '[0-9]+\.[0-9]+'); \
+	avg_util=0; \
+	for x in $${bw_utils}; do \
+		avg_util+=$$x; \
+	done \
+	avg_util/=12; \
+	printf '%s:\t%d\tcycles\tPM BW Util:\t%f\n' $(model) $${time} $${avg_util};
+endif
+endif
+
+run_benchmark:
+ifndef folder
+	echo "Missing 'folder' in make run_benchmark"
+else
+ifndef benchmark
+	echo "Missing 'benchmark' name in make run_benchmark"
+else
+ifndef exec_command
+	echo "Missing 'exec_command' in make run_benchmark"
+else
+	$(MAKE) -s clean_run results=$(results)
+	cd ./benchmarks/$(folder)/; \
+	$(MAKE)
+	
+	cd ./simulator;\
+	export CUDA_INSTALL_PATH=$(CUDA_INSTALL_PATH);\
+	source setup_environment;\
+	$(MAKE) -s; \
+	cd ../models; \
+	for j in $(models); do \
+		cd $$j; \
+		echo "Running $${j} $(benchmark)";\
+		../../benchmarks/$(folder)/$(exec_command) > ../../$(results)/$${j}_$(benchmark).out & \
+		cd ..;\
+	done; \
+	wait;
+	$(MAKE) output benchmark=$(benchmark)
+endif
+endif
+endif
+
+run_kvs: 
+	$(MAKE) -s run_benchmark folder=key_value_store benchmark=KVS exec_command="./build/imkv_gpu" models="$(models)" results=$(results)
+
+run_kvs_mm: 
+	$(MAKE) -s run_benchmark folder=key_value_store benchmark=KVS exec_command="./build/imkv_mm_gpu" models="$(models)" results=$(results)
+
+run_kvs_epoch_far: 
+	$(MAKE) -s run_benchmark folder=key_value_store benchmark=KVS exec_command="./build/imkv_gpu" models="$(models_gpm)" results=$(results)
+
+run_kvs_mm: 
+	$(MAKE) -s run_benchmark folder=key_value_store benchmark=KVS_mm exec_command="./build/imkv_mm_gpu" models="$(models_cap)" results=$(results)
+
+run_kvs_gpm: 
+	$(MAKE) -s run_benchmark folder=key_value_store benchmark=KVS_gpm_orig exec_command="./build/imkv_gpm_epoch" models="$(models_gpm)" results=$(results)
+
+run_kvs_rec: 
+	$(MAKE) -s run_benchmark folder=key_value_store benchmark=KVS_rec exec_command="./build/KVS_rec" models="$(models_rec)" results=$(results)
+
+run_srad: 
+	$(MAKE) -s run_benchmark folder=SRAD benchmark=SRAD exec_command="./build/srad_gpu 512 512 0 31 0 31 0.5 1" models="$(models)" results=$(results)
+
+run_srad_scale: 
+	$(MAKE) -s run_benchmark folder=srad_v2 benchmark=SRAD exec_command="./build/srad_gpu 512 512 0 31 0 31 0.5 1" models="$(models_scale)" results=results_scale
+
+run_srad_rec: 
+	$(MAKE) -s run_benchmark folder=SRAD benchmark=SRAD_rec exec_command="./build/srad_gpu_rec 1024 1024 0 31 0 31 0.5 1" models="$(models_rec)" results=$(results)
+
+run_srad_mm: 
+	$(MAKE) -s run_benchmark folder=srad_v2 benchmark=SRAD_mm exec_command="./build/srad_mm_gpu 512 512 0 31 0 31 0.5 1" models="$(models_cap)" results=$(results)
+
+run_srad_gpm: 
+	$(MAKE) -s run_benchmark folder=SRAD benchmark=SRAD_gpm_orig exec_command="./build/srad_gpm_epoch 512 512 0 31 0 31 0.5 1" models="$(models_gpm)" results=$(results)
+
+run_bfs:
+	$(MAKE) -s run_benchmark folder=bfs benchmark=BFS exec_command="./build/bfs_gpu -f ../benchmarks/bfs/input/NYR_input.dat" models="$(models)" results=$(results)
+
+run_heap: 
+	$(MAKE) -s run_benchmark folder=heap benchmark=HEAP exec_command="./build/heap_gpu" models="$(models)" results=$(results)
+
+run_hashmap: 
+	$(MAKE) -s run_benchmark folder=HM benchmark=hashmap exec_command="./build/hashmap_gpu" models="$(models)" results=$(results)
+
+run_hashmap_rec:
+	$(MAKE) -s run_benchmark folder=hashmap benchmark=hashmap_rec exec_command="./build/hashmap_gpu_rec" models="$(models_rec)" results=$(results)
+
+run_hashmap_gpm: 
+	$(MAKE) -s run_benchmark folder=hashmap benchmark=hashmap_gpm_orig exec_command="./build/hashmap_gpm_epoch" models="$(models_gpm)" results=$(results)
+
+run_reduction:
+	$(MAKE) -s run_benchmark folder=Red benchmark=reduction exec_command="./build/Red_gpu" models="$(models)" results=$(results)
+
+run_reduction_rec:
+	$(MAKE) -s run_benchmark folder=Red benchmark=reduction_rec exec_command="./build/Red_rec" models="$(models_rec)" results=$(results)
+
+run_reduction_gpm:
+	$(MAKE) -s run_benchmark folder=Red benchmark=reduction_gpm_orig exec_command="./build/Red_gpm" models="$(models_gpm)" results=$(results)
+
+run_dev_reduction:
+	$(MAKE) -s run_benchmark folder=reduction benchmark=dev_reduction exec_command="./build/reduction_dev_gpu" models="$(models)" results=$(results)
+
+run_scan:
+	$(MAKE) -s run_benchmark folder=scan benchmark=scan exec_command="./build/Scan_gpu" models="$(models)" results=$(results)
+
+run_scan_rec:
+	$(MAKE) -s run_benchmark folder=scan benchmark=scan_rec exec_command="./build/Scan_rec" models="$(models_rec)" results=$(results)
+
+run_scan_gpm:
+	$(MAKE) -s run_benchmark folder=scan benchmark=scan_gpm_orig exec_command="./build/Scan_gpm" models="$(models_gpm)" results=$(results)
+
+run_dev_scan:
+	$(MAKE) -s run_benchmark folder=scan benchmark=dev_scan exec_command="./build/scan_dev_gpu" models="$(models)" results=$(results)
+
+run_MQ:
+	$(MAKE) -s run_benchmark folder=MQ benchmark=MQ exec_command="./build/MQ_gpu" models="$(models)" results=$(results)
+
+run_MQ_rec:
+	$(MAKE) -s run_benchmark folder=MQ benchmark=MQ exec_command="./build/MQ_rec" models="$(models_rec)" results=$(results)
+
+run_MQ_gpm:
+	$(MAKE) -s run_benchmark folder=MQueue benchmark=MQ_gpm exec_command="./build/MQ_gpm" models="$(models_gpm)" results=$(results)
+
+run_dev_MQ:
+	$(MAKE) -s run_benchmark folder=MQueue benchmark=dev_multiqueue exec_command="./build/multiqueue_dev_gpu" models="$(models)" results=$(results)
+
+output_all:
+	$(MAKE) output benchmark=KVS        models="$(models)" results=$(results)
+	$(MAKE) output benchmark=KVS_mm     models="$(models)" results=$(results)
+	$(MAKE) output benchmark=hashmap    models="$(models)" results=$(results)
+	$(MAKE) output benchmark=SRAD       models="$(models)" results=$(results)
+	$(MAKE) output benchmark=reduction  models="$(models)" results=$(results)
+	$(MAKE) output benchmark=MQueue models="$(models)" results=$(results)
+	$(MAKE) output benchmark=scan       models="$(models)" results=$(results)
+
+output_scale:
+	$(MAKE) output benchmark=KVS        models="$(models_scale)" results=results_scale
+	$(MAKE) output benchmark=hashmap    models="$(models_scale)" results=results_scale
+	$(MAKE) output benchmark=SRAD       models="$(models_scale)" results=results_scale
+	$(MAKE) output benchmark=reduction  models="$(models_scale)" results=results_scale
+	$(MAKE) output benchmark=MQueue models="$(models_scale)" results=results_scale
+	$(MAKE) output benchmark=scan       models="$(models_scale)" results=results_scale
+
+
+output_gpm_orig:
+	$(MAKE) output benchmark=KVS_gpm_orig        models="$(models_gpm)" results=$(results)
+	$(MAKE) output benchmark=hashmap_gpm_orig    models="$(models_gpm)" results=$(results)
+	$(MAKE) output benchmark=SRAD_gpm_orig       models="$(models_gpm)" results=$(results)
+	$(MAKE) output benchmark=reduction_gpm_orig  models="$(models_gpm)" results=$(results)
+	$(MAKE) output benchmark=MQueue_gpm_orig models="$(models_gpm)" results=$(results)
+	$(MAKE) output benchmark=scan_gpm_orig       models="$(models_gpm)" results=$(results)
+
+output_dev:
+	$(MAKE) output benchmark=dev_reduction  models="$(models_dev)" results=$(results)
+	$(MAKE) output benchmark=dev_MQueue models="$(models_dev)" results=$(results)
+	$(MAKE) output benchmark=dev_scan       models="$(models_dev)" results=$(results)
+
+run_all_access:
+	$(MAKE) run_kvs       models="$(models_access)" results=$(results)
+	$(MAKE) run_kvs_mm    models="$(models_access)" results=$(results)
+	$(MAKE) run_hashmap   models="$(models_access)" results=$(results)
+	$(MAKE) run_srad      models="$(models_access)" results=$(results)
+	$(MAKE) run_reduction models="$(models_access)" results=$(results)
+	$(MAKE) run_MQ    models="$(models_access)" results=$(results)
+	$(MAKE) run_scan      models="$(models_access)" results=$(results)
+
+	$(MAKE) output_all    models="$(models_access)" results=$(results)
+	$(MAKE) output_all    models="$(models_Access)" results=$(results) > output_$(date +%s).txt
+	
+run_all:
+	$(MAKE) run_kvs       models="$(models)" results=$(results)
+	#$(MAKE) run_kvs_mm    models="$(models)" results=$(results)
+	$(MAKE) run_hashmap   models="$(models)" results=$(results)
+	$(MAKE) run_srad      models="$(models)" results=$(results)
+	$(MAKE) run_reduction models="$(models)" results=$(results)
+	$(MAKE) run_MQ    models="$(models)" results=$(results)
+	$(MAKE) run_scan      models="$(models)" results=$(results)
+	
+	$(MAKE) output_all    models="$(models)" results=$(results)
+	$(MAKE) output_all    models="$(models)" results=$(results) > output_$(date +%s).txt
+
+run_gpm_orig:
+	$(MAKE) run_kvs_gpm       models="$(models_gpm)" results=$(results)
+	$(MAKE) run_hashmap_gpm   models="$(models_gpm)" results=$(results)
+	$(MAKE) run_srad_gpm      models="$(models_gpm)" results=$(results)
+	$(MAKE) run_reduction_gpm models="$(models_gpm)" results=$(results)
+	$(MAKE) run_MQ_gpm    models="$(models_gpm)" results=$(results)
+	$(MAKE) run_scan_gpm      models="$(models_gpm)" results=$(results)
+	
+	$(MAKE) output_all    models="$(models_gpm)" results=$(results)
+	$(MAKE) output_all    models="$(models_gpm)" results=$(results) > output_$(date +%s).txt
+
+
+run_all_recovery:
+	$(MAKE) run_kvs_rec       models="$(models_rec)" results=results_rec
+	$(MAKE) run_hashmap_rec   models="$(models_rec)" results=results_rec
+	$(MAKE) run_srad_rec      models="$(models_rec)" results=results_rec
+	$(MAKE) run_reduction_rec models="$(models_rec)" results=results_rec
+	$(MAKE) run_MQ_rec    models="$(models_rec)" results=results_rec
+	$(MAKE) run_scan_rec      models="$(models_rec)" results=results_rec
+	
+run_dev:
+	$(MAKE) run_dev_reduction models="$(models_dev)" results=$(results)
+	$(MAKE) run_dev_MQ    models="$(models_dev)" results=$(results)
+	$(MAKE) run_dev_scan      models="$(models_dev)" results=$(results)
+	
+	$(MAKE) output_dev    models="$(models_dev)" results=$(results)
+	$(MAKE) output_dev    models="$(models_dev)" results=$(results) > output_dev_$(date +%s).txt
+
+run_perf:
+	$(MAKE) run_all models="$(models_perf)"  results=results_perf
+
+run_evict:
+	$(MAKE) run_all models="$(models_evict)" results=results_evict
+	
+run_buff_size:
+	$(MAKE) run_all models="$(models_bsize)" results=results
+	
+run_scale:
+	$(MAKE) run_all models="$(models_scale)" results=results_scale
+	
+run_bw:
+	$(MAKE) run_all models="$(models_bw)" results=results_bw
+	
+run_window:
+	$(MAKE) run_all models="$(models_window)" results=results_window
+
+run_gpm:
+	$(MAKE) run_all models="$(models_gpm)" results=results_gpm
+
+output_perf:
+	$(MAKE) output_all models="$(models_perf)"  results=results_perf
+
+output_evict:
+	$(MAKE) output_all models="$(models_evict)"  results=results_evict
+
+output_bw:
+	$(MAKE) output_all models="$(models_bw)"  results=results_bw
+	
+
+clean:
+	rm -f $(outputs)
+	rm -f */_app*
+	rm -f */_cuo*
+	rm -f */*.ptx*
+
+
