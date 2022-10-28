@@ -107,7 +107,7 @@ make output_figure10_c
 
 ## Source code
 There are four main folders in this repository:
-- **[benchmarks/](benchmarks/)**: This folder contains the CUDA source code for the benchmarks evaluated. 
-- **[models/](models/)**: This folder contains the GPGPU-Sim configurations for all the different models evaluated.
-- **[scripts/](scripts/)**: This folder contains the python scripts for plotting the different graphs.
-- **[simulator/](simulator/)**: This is the main folder containing GPGPU-Sim and the source code for SBRP. The majority of the functionality for SBRP is encapsulated in [src/gpgpu-sim/persist.cc](simulator/src/gpgpu-sim/persist.cc), which contains the main implementation of the buffer. Other modifications were performed in the cache and memory hierarchy to support this new buffer.
+- **[benchmarks](benchmarks/)**: This folder contains the CUDA source code for the benchmarks evaluated. 
+- **[models](models/)**: This folder contains the GPGPU-Sim configurations for all the different models evaluated.
+- **[scripts](scripts/)**: This folder contains the python scripts for plotting the different graphs.
+- **[simulator](simulator/)**: This is the main folder containing GPGPU-Sim and the source code for SBRP. The majority of the functionality for SBRP is encapsulated in [src/gpgpu-sim/persist.cc](simulator/src/gpgpu-sim/persist.cc), which contains the main implementation of the buffer. Other modifications were performed in the cache and memory hierarchy to support this new buffer.
