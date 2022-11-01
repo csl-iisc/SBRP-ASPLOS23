@@ -29,6 +29,8 @@ To run experiments within the container, build the container as:
 docker build . -t sbrp:v1
 ```
 
+The docker container also installs matplotlib which requires one to choose their current region and timezone. 
+
 Then launch the docker container in an interactive as: 
 
 ```bash
