@@ -6,7 +6,37 @@ This repository consists of the source code of the simulator, benchmarks used fo
 
 We shall first explain how to replicate our results, then highlight the important files and folders contained in this repository.
 
-## Setting up GPGPU-sim and running
+##Running the docker container
+To install docker on an Ubuntu machine 
+
+```bash
+sudo apt install docker.io
+```
+
+Git clone the artifact, as follows: 
+
+```bash
+git clone \
+https://github.com/csl-iisc/SBRP-ASPLOS23
+cd SBRP-ASPLOS23
+```
+
+To run experiments within the container, build the container as:
+
+```bash
+docker build -f . -t sbrp:v1
+```
+
+Then launch the docker container in an interactive as: 
+
+```bash
+docker run -it sbrp:v1
+```
+Finally run the make commands as listed below. 
+
+## [Alternatively] Setting up GPGPU-sim and running
+
+Alternatively, one can run the experiments on the bare machine with the steps mentioned below.
 To install cuda-11.4, follow:
 
 ```bash
@@ -30,11 +60,25 @@ sudo apt-get install libxi-dev libxmu-dev libglut3-dev
 Ensure that nvcc and cuda are in the PATH variable 
 ```bash
 export CUDA_INSTALL_PATH=/usr/local/cuda
-export PATH=$CUDA_INSTALL_PATH/bin
+export PATH=$PATH:$CUDA_INSTALL_PATH/bin
 ```
 
+Also add cudart.so in the LD_LIBRARY_PATH
+
+To find the path: 
+```bash
+sudo find / -name 'libcudart.so.11.0'
+```
+
+```bash
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-11.4/targets/x86_64-linux/lib
+```
 
 ## Running all figures and generating outputs 
+
+Once the setup for the docker container or the bare machine has completed. 
+Proceed with the following steps to run the artifact. 
+
 ```bash
 make run_output_all 
 ```
