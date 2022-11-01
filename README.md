@@ -24,7 +24,7 @@ cd SBRP-ASPLOS23
 To run experiments within the container, build the container as:
 
 ```bash
-docker build -f . -t sbrp:v1
+docker build . -t sbrp:v1
 ```
 
 Then launch the docker container in an interactive as: 
