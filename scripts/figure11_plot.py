@@ -14,8 +14,8 @@ figure11_speedup = []
 path = "../figure11_results/"
 os.chdir(path)
 
-graph_path = "../figure11_graph.pdf"
-output_file_path = "../figure11_output.txt"
+graph_path = "../outputs/figure11_graph.pdf"
+output_file_path = "../outputs/figure11_output.txt"
 
 baseline_latency = {}
 
