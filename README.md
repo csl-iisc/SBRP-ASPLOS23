@@ -6,12 +6,7 @@ This repository consists of the source code of the simulator, benchmarks used fo
 
 We shall first explain how to replicate our results, then highlight the important files and folders contained in this repository.
 
-## Running the docker container
-To install docker on an Ubuntu machine 
-
-```bash
-sudo apt install docker.io
-```
+## Obtaining the artifact
 
 Git clone the artifact, as follows: 
 
@@ -21,6 +16,13 @@ https://github.com/csl-iisc/SBRP-ASPLOS23
 cd SBRP-ASPLOS23
 ```
 
+
+## Running the docker container
+To install docker on an Ubuntu machine 
+
+```bash
+sudo apt install docker.io
+```
 To run experiments within the container, build the container as:
 
 ```bash
