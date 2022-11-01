@@ -120,6 +120,12 @@ To execute figure 10c, use the following command:
 make run_figure10_c
 ```
 
+To execute figure 11, use the following command: 
+```bash
+make run_figure11
+```
+
+
 ## Generating output CSV files and graphs individually
 To generate figure 6, use the following command: 
 ```bash
@@ -145,6 +151,12 @@ To generate figure 10(c), use the following command:
 ```bash
 make output_figure10_c
 ```
+
+To generate figure 11, use the following command: 
+```bash
+make output_figure11
+```
+
 
 ## Source code
 There are four main folders in this repository:
