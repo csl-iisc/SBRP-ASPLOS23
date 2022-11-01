@@ -6,7 +6,7 @@ This repository consists of the source code of the simulator, benchmarks used fo
 
 We shall first explain how to replicate our results, then highlight the important files and folders contained in this repository.
 
-##Running the docker container
+## Running the docker container
 To install docker on an Ubuntu machine 
 
 ```bash
