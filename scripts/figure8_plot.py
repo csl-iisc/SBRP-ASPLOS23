@@ -81,7 +81,7 @@ for i in range(len(models)):
 
 plt.ylabel('Normalized L1 misses', fontweight = 'bold', fontsize = 20)
 plt.xticks([r + 2 * bar_width for r in range(len(benchmarks))],
-           ['GPM', 'HM', 'SRAD', 'Red', 'MQ', 'Scan'])
+           ['gpKVS', 'HM', 'SRAD', 'Red', 'MQ', 'Scan'])
 
 plt.legend()
 plt.savefig(graph_path, format='pdf')
