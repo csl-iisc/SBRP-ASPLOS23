@@ -3,9 +3,9 @@ CUDA_INSTALL_PATH ?= /usr/local/cuda-11.4
 
 figure6_models 	  = epoch_far sbrp_far epoch_near sbrp_near
 figure9_models    = epoch_far epoch_far_eadr sbrp_far_eadr
-figure10_a_models = sbrp_near_L1_125 sbrp_near_L1_25 sbrp_near_L1_50 sbrp_near 
+figure10_a_models = sbrp_near_L1_125 sbrp_near_L1_25 sbrp_near_L1_50 sbrp_near epoch_near
 figure10_b_models = epoch_near_bw_half sbrp_near_bw_half sbrp_near epoch_near_bw_double sbrp_near_bw_double epoch_near
-figure10_c_models = sbrp_near_window_2 sbrp_near_window_4 sbrp_near sbrp_near_window_8 sbrp_near_window_10 sbrp_near_window_12  
+figure10_c_models = sbrp_near_window_2 sbrp_near_window_4 sbrp_near sbrp_near_window_8 sbrp_near_window_10 sbrp_near_window_12 epoch_near
 figure11_models   = epoch_near sbrp_near 
 gpm_model 		  = gpm
 
