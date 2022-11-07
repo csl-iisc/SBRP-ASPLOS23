@@ -82,7 +82,7 @@ for i in range(len(models)):
 
 plt.ylabel('Normalized run time', fontweight = 'bold', fontsize = 15)
 plt.xticks([r + 1.5 * bar_width for r in range(len(benchmarks))],
-           ['GPM', 'HM', 'SRAD', 'Red', 'MQ', 'Scan'])
+           ['gpKVS', 'HM', 'SRAD', 'Red', 'MQ', 'Scan'])
 
 plt.legend()
 plt.savefig(graph_path, format='pdf')
