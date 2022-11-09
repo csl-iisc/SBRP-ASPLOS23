@@ -1,4 +1,5 @@
 # Scoped Buffered Persistency Model for GPUs
+[![DOI](https://zenodo.org/badge/553858319.svg)](https://zenodo.org/badge/latestdoi/553858319)
 
 We provide the source code and setup for our GPU persistency model, Scoped Buffered Release Persistency (SBRP). SBRP is a scope-aware, buffered persistency model that provides high performance to GPU applications that wish to persist data on Non-Volatile Memory (NVM). SBRP modifies the GPU hardware and has been implemented using GPGPU-Sim, a GPU simulator. For more details on the simulator requirements, check the **[README](simulator/README.md)** in the simulator folder.
 
