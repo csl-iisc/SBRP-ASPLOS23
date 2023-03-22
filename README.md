@@ -5,6 +5,10 @@ We provide the source code and setup for our GPU persistency model, Scoped Buffe
 
 This repository consists of the source code of the simulator, benchmarks used for evaluation and all scripts needed to replicate the figures in the paper. 
 
+For full details refer to our paper:
+- Shweta Pandey, Aditya K Kamath, and Arkaprava Basu. 2023. **Scoped Buffered Persistency Model for GPUs.** In _Proceedings of the 28th ACM International Conference on Architectural Support for Programming Languages and Operating Systems, Volume 2 (ASPLOS '23)._ DOI:https://doi.org/10.1145/3575693.3575749 
+- [[Paper]](https://akkamath.github.io/files/ASPLOS23_SBRP.pdf)
+
 We shall first explain how to replicate our results, then highlight the important files and folders contained in this repository.
 
 ## Obtaining the artifact
