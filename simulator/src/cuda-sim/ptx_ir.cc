@@ -1293,6 +1293,9 @@ ptx_instruction::ptx_instruction(
       case SAT_OPTION:
         m_saturation_mode = 1;
         break;
+      case SHIFTAMT_OPTION:
+        m_shiftamt = true;
+        break;
       case RNI_OPTION:
       case RZI_OPTION:
       case RMI_OPTION:

@@ -305,6 +305,7 @@ breakaddr  TC; yylval->int_value = BREAKADDR_OP; return OPCODE;
 \.nan	TC; return NAN_OPTION;
 
 \.sat	TC; return SAT_OPTION;
+\.shiftamt	TC; return SHIFTAMT_OPTION;
 
 \.eq    TC; return EQ_OPTION;
 \.ne    TC; return NE_OPTION;

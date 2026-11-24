@@ -50,6 +50,13 @@ typedef enum {
 class persist_buffer
 {
 public:
+    // Lazy-policy fix: a warp waiting on a durability fence must be able to
+    // start a flush when none is in flight (otherwise nothing ever wakes it).
+    void kickDurable(unsigned warpId) {
+        if(flushedEntries.empty() && !bufferEntries.empty())
+            beginFlush(warp_mask_t().set(warpId % WARPS_PER_SM), true);
+    }
+
     persist_buffer(bool isL1, persist_buffer *l2PBuffer, gpgpu_sim *gpu = NULL, char *name = NULL, int sid = -1) {
         // Need to supply L2 buffer if is L1 buffer
         if(isL1Buffer)

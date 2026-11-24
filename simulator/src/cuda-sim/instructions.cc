@@ -1735,11 +1735,13 @@ void bfind_impl(const ptx_instruction *pI, ptx_thread_info *thread)
       a = ~a;
   }
   uint32_t d_data = 0xffffffff;
-  for (uint32_t i = msb; i >= 0; i--) {
-      if (a & (1<<i))  { d_data = i; break; }
+  for (int i = msb; i >= 0; i--) {
+      if (a & (1UL << i))  { d_data = i; break; }
   }
 
-  // if (.shiftamt && d != 0xffffffff)  { d = msb - d; }
+  // PTX ISA: bfind.shiftamt returns the left-shift amount that moves the
+  // found bit to the MSB position; 0xffffffff is still returned if none found.
+  if (pI->shiftamt() && d_data != 0xffffffff)  { d_data = msb - d_data; }
 
   // store d
   thread->set_operand_value(dst, d_data, U32_TYPE, thread, pI);
