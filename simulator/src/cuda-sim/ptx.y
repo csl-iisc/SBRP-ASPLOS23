@@ -171,6 +171,7 @@ class ptx_recognizer;
 %token GEOM_MODIFIER_2D
 %token GEOM_MODIFIER_3D
 %token SAT_OPTION
+%token SHIFTAMT_OPTION
 %token FTZ_OPTION
 %token NEG_OPTION
 %token SYNC_OPTION
@@ -491,6 +492,7 @@ option: type_spec
 	| GEOM_MODIFIER_2D { recognizer->add_option(GEOM_MODIFIER_2D); }
 	| GEOM_MODIFIER_3D { recognizer->add_option(GEOM_MODIFIER_3D); }
 	| SAT_OPTION { recognizer->add_option(SAT_OPTION); }
+	| SHIFTAMT_OPTION { recognizer->add_option(SHIFTAMT_OPTION); }
 	| FTZ_OPTION { recognizer->add_option(FTZ_OPTION); }
 	| NEG_OPTION { recognizer->add_option(NEG_OPTION); }
 	| APPROX_OPTION { recognizer->add_option(APPROX_OPTION); }

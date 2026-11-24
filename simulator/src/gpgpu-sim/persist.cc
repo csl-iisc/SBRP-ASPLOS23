@@ -92,8 +92,10 @@ bool shader_core_ctx::warp_waiting_for_persist(unsigned warp_id) {
             // I don't remember what this was for
             if(delayed_warps[get_sid()].find(warp_id % WARPS_PER_SM) != delayed_warps[get_sid()].end())
                 return true;
-            if(durable_warps[get_sid()].find(warp_id % WARPS_PER_SM) != durable_warps[get_sid()].end())
+            if(durable_warps[get_sid()].find(warp_id % WARPS_PER_SM) != durable_warps[get_sid()].end()) {
+                if(!eagerFlush) m_ldst_unit->m_pBuffer->kickDurable(warp_id);
                 return true;
+            }
             // Check if waiting for release op
             return m_warp[warp_id]->get_waiting_persist() || pm_warp_stalled(get_sid(), warp_id);
             break;

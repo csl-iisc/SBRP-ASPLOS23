@@ -7,6 +7,14 @@ figure10_a_models = sbrp_near_L1_125 sbrp_near_L1_25 sbrp_near_L1_50 sbrp_near e
 figure10_b_models = epoch_near_bw_half sbrp_near_bw_half sbrp_near epoch_near_bw_double sbrp_near_bw_double epoch_near
 figure10_c_models = sbrp_near_window_2 sbrp_near_window_4 sbrp_near sbrp_near_window_8 sbrp_near_window_10 sbrp_near_window_12 epoch_near
 figure11_models   = epoch_near sbrp_near 
+
+# Additional studies (see "Additional studies" in README.md)
+eviction_models  = epoch_near sbrp_near sbrp_near_eager sbrp_near_lazy
+mechanism_models = epoch_near sbrp_near sbrp_near_nodeprio
+smscale_models   = epoch_near sbrp_near epoch_near_sm15 sbrp_near_sm15 epoch_near_sm60 sbrp_near_sm60 epoch_near_sm80 sbrp_near_sm80
+latency_models   = epoch_near sbrp_near epoch_near_lat150 sbrp_near_lat150 epoch_near_lat600 sbrp_near_lat600 epoch_near_lat900 sbrp_near_lat900
+noadr_models     = epoch_near sbrp_near epoch_near_noadr sbrp_near_noadr sbrp_near_noadr_win24
+extra_studies    = eviction mechanism smscale latency noadr
 gpm_model 		  = gpm
 
 
@@ -265,4 +273,20 @@ clean:
 	rm -f */_cuo*
 	rm -f */*.ptx*
 
+# ---------------------------------------------------------------------------
+# Additional studies: run_<study> simulates, output_<study> plots.
+# ---------------------------------------------------------------------------
+run_eviction run_mechanism run_smscale run_latency run_noadr: run_%:
+	mkdir -p $*_results
+	for b in KVS HM SRAD Red MQ Scan; do \
+		$(MAKE) run_$$b models="$($*_models)" results=$*_results; \
+	done
+
+output_eviction output_mechanism output_smscale output_latency output_noadr: output_%:
+	mkdir -p outputs/ && cd scripts/ && python3 thesis_plots.py $* && cd ../
+
+run_extra: $(addprefix run_,$(extra_studies))
+
+output_extra:
+	mkdir -p outputs/ && cd scripts/ && python3 thesis_plots.py all && cd ../
 

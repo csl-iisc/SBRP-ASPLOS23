@@ -74,7 +74,7 @@ else ifeq ($(NVOPENCL_INCDIR),)
 else
 	TARGETS += $(SIM_LIB_DIR)/libOpenCL.so
 endif
-	TARGETS += cuobjdump_to_ptxplus/cuobjdump_to_ptxplus
+#	TARGETS += cuobjdump_to_ptxplus/cuobjdump_to_ptxplus  # not needed: configs use -gpgpu_ptx_convert_to_ptxplus 0
 
 MCPAT=
 MCPAT_OBJ_DIR=

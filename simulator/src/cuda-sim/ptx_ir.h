@@ -1085,6 +1085,7 @@ class ptx_instruction : public warp_inst_t {
   unsigned cache_option() const { return m_cache_option; }
   unsigned rounding_mode() const { return m_rounding_mode; }
   unsigned saturation_mode() const { return m_saturation_mode; }
+  bool shiftamt() const { return m_shiftamt; }
   unsigned dimension() const { return m_geom_spec; }
   unsigned barrier_op() const { return m_barrier_op; }
   unsigned shfl_op() const { return m_shfl_op; }
@@ -1158,6 +1159,7 @@ class ptx_instruction : public warp_inst_t {
   unsigned m_rounding_mode;
   unsigned m_compare_op;
   unsigned m_saturation_mode;
+  bool m_shiftamt = false;  // bfind.shiftamt
   unsigned m_barrier_op;
   unsigned m_shfl_op;
   unsigned m_prmt_op;

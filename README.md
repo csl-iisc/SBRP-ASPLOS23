@@ -171,6 +171,47 @@ make output_figure11
 ```
 
 
+## Additional studies
+
+Beyond the figures in the paper, the repository includes five further studies.
+All of them use the PM-near system and report the speedup of SBRP over the
+epoch persistency model on the same configuration (higher is better).
+
+| Study | What it varies | Run | Plot |
+|---|---|---|---|
+| `eviction` | Persist-buffer flush policy: eager, lazy, and window (default) | `make run_eviction` | `make output_eviction` |
+| `mechanism` | SBRP without warp deprioritization at fences | `make run_mechanism` | `make output_mechanism` |
+| `smscale` | Number of SMs: 15, 30 (default), 60, 80 | `make run_smscale` | `make output_smscale` |
+| `latency` | PM access latency: 150, 300 (default), 600, 900 cycles | `make run_latency` | `make output_latency` |
+| `noadr` | Persistence domain without ADR (durable only at PM), with the default window and a window of 24 | `make run_noadr` | `make output_noadr` |
+
+`make run_extra` runs all five and `make output_extra` plots them. Results go to
+`<study>_results/`, and graphs and CSV-style tables to `outputs/<study>_graph.pdf`
+and `outputs/<study>_output.txt`.
+
+The configurations are in `models/` and differ from `sbrp_near` or `epoch_near`
+in a single option:
+
+| Model | Option |
+|---|---|
+| `sbrp_near_eager` | `-pm_outstanding_flushes 0` (no limit on outstanding flushes) |
+| `sbrp_near_lazy` | `-pm_eager_flush 0` (flush only at ordering points) |
+| `sbrp_near_nodeprio` | `-pm_deprioritise 0` |
+| `*_sm15`, `*_sm60`, `*_sm80` | `-gpgpu_n_clusters` |
+| `*_lat150`, `*_lat600`, `*_lat900` | `-pm_latency` |
+| `*_noadr` | `-pm_enable_adr 0` |
+| `sbrp_near_noadr_win24` | `-pm_enable_adr 0 -pm_outstanding_flushes 24` |
+
+Notes:
+* Scan's input size and inter-block synchronization assume all of its
+  threadblocks are resident at once, which does not hold with 15 SMs; that
+  point is reported as n/a.
+* The studies were run with CUDA 11.8 and gcc 11. Newer CUDA compilers emit
+  `bfind.shiftamt` (for example in gpKVS), which the simulator now supports, and
+  newer versions of bison are handled by the PTX token-list generation in
+  `simulator/src/cuda-sim/Makefile`. The PTXPlus converter is no longer built by
+  default, since none of the configurations use PTXPlus.
+
 ## Source code
 There are four main folders in this repository:
 - **[benchmarks](benchmarks/)**: This folder contains the CUDA source code for the benchmarks evaluated. 
